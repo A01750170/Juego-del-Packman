@@ -3,7 +3,7 @@
 # Autor: Jeovani Hernández Bastida
 
 # Se importan las librerias a usar
-from random import choice
+from random import choice, randint
 from turtle import *
 from freegames import floor, vector
 
@@ -72,7 +72,6 @@ def valid(point):
     es aceptable
     """
     index = offset(point)
-
     if tiles[index] == 0:
         return False
 
@@ -94,20 +93,69 @@ def world():
         Si estamos en un cuadro valido lo dibujamos en azul 
         y ponemos el punto blanco
         """
-        if tile == 1:
+        if tile > 0:
             x = (index % 20) * 20 - 200
             y = 180 - (index // 20) * 20
             square(x, y)
-            path.up()
-            path.goto(x + 10, y + 10)
-            path.dot(2, 'white')
 
-def move():
-    """Mueve el pacman y los fantasmas"""
+            if tile == 1:
+                path.up()
+                path.goto(x + 10, y + 10)
+                path.dot(2, 'white')
+
+def moveGhosts():
+    """Mueve los fantasmas"""
+    global plan
+    # Ciclo que modifica el movimiento de los fantasmas
+    for point, course in ghosts:
+        #Si el numero aleatorio es 4, modifica la trayectoria
+        if(randint(0,5) == 4):
+            options = [
+                    vector(5, 0),
+                    vector(-5, 0),
+                    vector(0, 5),
+                    vector(0, -5),
+                    vector(0,pacman.y/2),
+                    vector(pacman.x/2,0)
+                ]
+            plan = choice(options)
+            course.x = plan.x
+            course.y = plan.y
+        else:
+            # Si el destino es válido, lo hace
+            if valid(point + course):
+                point.move(course)
+            #Si el destino no es válido, elige uno nuevo
+            else:
+                options = [
+                    vector(5, 0),
+                    vector(-5, 0),
+                    vector(0, 5),
+                    vector(0, -5),
+                    vector(0,pacman.y/2),
+                    vector(pacman.x/2,0)
+                ]
+                plan = choice(options)
+                course.x = plan.x
+                course.y = plan.y
+        up()
+        goto(point.x + 10, point.y + 10)
+        dot(20, 'red')  # Dibuja al fantasma
+    update()
+    # Termina el juego si alguno de los fantamas choca con pacman 
+    for point, course in ghosts: 
+        if abs(pacman - point) < 20:
+            return
+    ontimer(moveGhosts, 100)  # Ejecuta el método moveGhosts cada 100ms
+
+def limpiar():
+    clear()
+    ontimer(limpiar, 100)
+
+def movePacman():
+    """Mueve el pacman"""
     writer.undo()
     writer.write(state['score'])
-
-    clear()
      
     # Si la futura posición del pacman es válida se mueve
     if valid(pacman + aim):
@@ -128,36 +176,8 @@ def move():
     up()    # Mueve el cursor hacia arriba
     goto(pacman.x + 10, pacman.y + 10)  # Nos lleva hacia el pacman en x, y 
     dot(20, 'yellow')   # Dibuja el pacman
-
-    # Ciclo que modifica el movimiento de los fantasmas
-    for point, course in ghosts:
-        # Si el destino es válido, lo hace
-        if valid(point + course):
-            point.move(course)
-        #Si el destino no es válido, elige uno nuevo
-        else:
-            options = [
-                vector(5, 0),
-                vector(-5, 0),
-                vector(0, 5),
-                vector(0, -5),
-            ]
-            plan = choice(options)
-            course.x = plan.x
-            course.y = plan.y
-
-        up()
-        goto(point.x + 10, point.y + 10)
-        dot(20, 'red')  # Dibuja al fantasma
-
     update()
-
-    # Termina el juego si alguno de los fantamas choca con pacman 
-    for point, course in ghosts: 
-        if abs(pacman - point) < 20:
-            return
-
-    ontimer(move, 100)  # Ejecuta el método move cada 100ms
+    ontimer(movePacman, 100)  # Ejecuta el método movePacman cada 100ms
 
 def change(x, y):
     """Cambia la dirección del pacman si esta es válida"""
@@ -180,5 +200,7 @@ onkey(lambda: change(0, 5), 'Up')
 onkey(lambda: change(0, -5), 'Down')
 
 world()  # Dibuja el mundo
-move()  # Mueve por primera vez al pacman y los fantasmas 
+movePacman()  # Mueve por primera vez al pacman
+moveGhosts()    # Mueve por primera vez los fantasmas
+limpiar()
 done()
