@@ -1,6 +1,6 @@
 # Código modificado por:
-# Autor: Erick Hernández Silva.
-# Autor: Jeovani Hernández Bastida.
+# Autor: Erick Hernández Silva
+# Autor: Jeovani Hernández Bastida
 
 # Se importan las librerias a usar
 from random import choice, randint
